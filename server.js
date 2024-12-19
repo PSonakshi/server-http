@@ -1,4 +1,5 @@
 const http = require('http');
+const fs = require('fs');
 const path = require('path');
 
 const PORT = 3000;
@@ -16,16 +17,10 @@ const server = http.createServer((req, res) => {
     if (url === '/text' && method === 'GET') {
         res.statusCode = 200;
         res.setHeader('Content-Type', 'text/plain');
-        res.end('Why did the backend developer break up with the frontend developer? Because they couldn\'t handle the requests! ');
+        res.end('Why did the backend developer break up with the frontend developer? Because they couldn\'t handle the requests!');
         return;
     }
 
-    if (url === '/html' && method === 'GET') {
-        res.statusCode = 200;
-        res.setHeader('Content-Type', 'text/html');
-        res.end('<html><body><h1>This is an HTML page</h1></body></html>');
-        return;
-    }
 
     const mediaRoutes = {
         '/media/img': 'image.jpg',
@@ -34,21 +29,39 @@ const server = http.createServer((req, res) => {
     };
 
     if (mediaRoutes[url] && method === 'GET') {
-        let contentType = '';
-        if (url.includes('img')) contentType = 'image/jpeg';
-        if (url.includes('audio')) contentType = 'audio/mpeg';
-        if (url.includes('video')) contentType = 'video/mp4';
+        const mediaPath = path.join(__dirname, 'media', mediaRoutes[url]);
+        fs.readFile(mediaPath, (err, data) => {
+            if (err) {
+                res.statusCode = 404;
+                res.setHeader('Content-Type', 'text/plain');
+                res.end(`not found`);
+                return;
+            }
+            let contentType = '';
+            if (url.includes('img')) contentType = 'image/jpeg';
+            if (url.includes('audio')) contentType = 'audio/mpeg';
+            if (url.includes('video')) contentType = 'video/mp4';
 
-        res.statusCode = 200;
-        res.setHeader('Content-Type', contentType);
-        res.end('Media content here');
+            res.statusCode = 200;
+            res.setHeader('Content-Type', contentType);
+            res.end(data);
+        });
         return;
     }
 
     if (url === '/pdf' && method === 'GET') {
-        res.statusCode = 200;
-        res.setHeader('Content-Type', 'application/pdf');
-        res.end('PDF content here');
+        const pdfPath = path.join(__dirname, 'files', 'sample.pdf');
+        fs.readFile(pdfPath, (err, data) => {
+            if (err) {
+                res.statusCode = 404;
+                res.setHeader('Content-Type', 'text/plain');
+                res.end('PDF not found');
+                return;
+            }
+            res.statusCode = 200;
+            res.setHeader('Content-Type', 'application/pdf');
+            res.end(data);
+        });
         return;
     }
 
